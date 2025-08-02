@@ -28,7 +28,7 @@ body {
 .ui-panel {
     display: flex;
     gap: 40px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     padding: 15px 25px;
     background: #000000;
     border: 3px solid #00ff00;
@@ -37,6 +37,155 @@ body {
         0 0 0 2px #000000,
         0 0 0 5px #00ff00,
         0 0 20px rgba(0, 255, 0, 0.3);
+    animation: glow 1s ease-in-out infinite alternate; /* Faster glow animation */
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 
+            0 0 0 2px #000000,
+            0 0 0 5px #00ff00,
+            0 0 20px rgba(0, 255, 0, 0.3);
+    }
+    to {
+        box-shadow: 
+            0 0 0 2px #000000,
+            0 0 0 5px #00ff00,
+            0 0 30px rgba(0, 255, 0, 0.6);
+    }
+}
+
+.trading-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 25px;
+    background: #000000;
+    border: 2px solid #00ff00;
+    border-radius: 0;
+    box-shadow: 
+        0 0 0 1px #000000,
+        0 0 0 3px #00ff00,
+        0 0 10px rgba(0, 255, 0, 0.2);
+    animation: pulse 0.75s ease-in-out infinite alternate; /* Faster pulse animation */
+}
+
+@keyframes pulse {
+    from {
+        border-color: #00ff00;
+        box-shadow: 
+            0 0 0 1px #000000,
+            0 0 0 3px #00ff00,
+            0 0 10px rgba(0, 255, 0, 0.2);
+    }
+    to {
+        border-color: #00cc00;
+        box-shadow: 
+            0 0 0 1px #000000,
+            0 0 0 3px #00cc00,
+            0 0 15px rgba(0, 255, 0, 0.4);
+    }
+}
+
+.trading-status {
+    flex: 1;
+}
+
+.status-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+.profit-loss {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profit-loss .label {
+    font-size: 10px;
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+.profit-loss .value {
+    font-size: 12px;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #000000;
+    font-weight: bold;
+}
+
+.profit-loss .percentage {
+    font-size: 10px;
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+.profit-loss .value.positive {
+    color: #00ff00;
+}
+
+.profit-loss .value.negative {
+    color: #ff0000;
+}
+
+.profit-loss .percentage.positive {
+    color: #00ff00;
+}
+
+.profit-loss .percentage.negative {
+    color: #ff0000;
+}
+
+/* Trading state indicators */
+.trading-status.buying {
+    color: #00ff00 !important;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+.trading-status.selling {
+    color: #ff8c00 !important;
+    text-shadow: 0 0 10px #ff8c00;
+}
+
+.trading-status.idle {
+    color: #00ff00 !important;
+}
+
+/* Portfolio value indicators */
+.portfolio-value.buying {
+    color: #00ff00 !important;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+.portfolio-value.selling {
+    color: #ff8c00 !important;
+    text-shadow: 0 0 10px #ff8c00;
+}
+
+/* Bitcoin holdings indicators */
+.bitcoin-holdings.buying {
+    color: #00ff00 !important;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+.bitcoin-holdings.selling {
+    color: #ff8c00 !important;
+    text-shadow: 0 0 10px #ff8c00;
+}
+
+/* Cash amount indicators */
+.cash-amount.buying {
+    color: #ff8c00 !important;
+    text-shadow: 0 0 10px #ff8c00;
+}
+
+.cash-amount.selling {
+    color: #00ff00 !important;
+    text-shadow: 0 0 10px #00ff00;
 }
 
 .ui-element {
@@ -69,6 +218,31 @@ body {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#gameCanvas.buying {
+    border-color: #00ff00;
+    box-shadow: 
+        0 0 0 2px #000000,
+        0 0 0 6px #00ff00,
+        0 0 30px rgba(0, 255, 0, 0.6);
+}
+
+#gameCanvas.selling {
+    border-color: #ff8c00;
+    box-shadow: 
+        0 0 0 2px #000000,
+        0 0 0 6px #ff8c00,
+        0 0 30px rgba(255, 140, 0, 0.6);
+}
+
+#gameCanvas.paused {
+    border-color: #ffff00;
+    box-shadow: 
+        0 0 0 2px #000000,
+        0 0 0 6px #ffff00,
+        0 0 30px rgba(255, 255, 0, 0.6);
 }
 
 .instructions {

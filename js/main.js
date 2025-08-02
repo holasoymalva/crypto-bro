@@ -68,7 +68,7 @@ class CryptoBoyGame {
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'controls-info';
         controlsDiv.innerHTML = `
-            <p>SPACE: Buy/Sell | P: Pause | R: Restart</p>
+            <p>SPACE: Buy/Sell | P: Pause | R: Restart | +/-: Speed</p>
         `;
         controlsDiv.style.cssText = `
             position: fixed;

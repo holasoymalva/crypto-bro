@@ -6,11 +6,14 @@ class GameEngine {
         this.canvas = canvas;
         this.dataManager = dataManager;
         this.chartRenderer = chartRenderer;
+        this.characterSystem = null; // Will be initialized after character system is loaded
+        this.visualEffects = null; // Will be initialized after visual effects system is loaded
+        this.audioSystem = null; // Will be initialized after audio system is loaded
         
         // Game state
         this.isRunning = false;
         this.isPaused = false;
-        this.gameSpeed = 1; // days per second
+        this.gameSpeed = 5; // days per second (increased from 1)
         this.currentDateIndex = 0;
         this.startDateIndex = 0;
         this.endDateIndex = 0;
@@ -31,7 +34,12 @@ class GameEngine {
         this.uiElements = {
             currentDate: document.getElementById('current-date'),
             currentPrice: document.getElementById('current-price'),
-            portfolioValue: document.getElementById('portfolio-value')
+            portfolioValue: document.getElementById('portfolio-value'),
+            bitcoinHoldings: document.getElementById('bitcoin-holdings'),
+            cashAmount: document.getElementById('cash-amount'),
+            tradingStatus: document.getElementById('trading-status'),
+            profitLossValue: document.getElementById('profit-loss-value'),
+            profitLossPercentage: document.getElementById('profit-loss-percentage')
         };
         
         // Animation
@@ -55,6 +63,25 @@ class GameEngine {
         
         // Set up event listeners
         this.setupEventListeners();
+        
+        // Initialize character system
+        this.characterSystem = new CharacterSystem(this.canvas, this);
+        
+        // Update chart renderer with game engine reference
+        this.chartRenderer.gameEngine = this;
+        
+        // Initialize visual effects system
+        this.visualEffects = new VisualEffectsSystem(this.canvas, this);
+        
+        // Initialize audio system
+        this.audioSystem = new AudioSystem();
+        
+        // Start background music
+        setTimeout(() => {
+            if (this.audioSystem) {
+                this.audioSystem.startBackgroundMusic();
+            }
+        }, 1000);
         
         // Start the game loop
         this.start();
@@ -144,6 +171,16 @@ class GameEngine {
                     e.preventDefault();
                     this.togglePause();
                     break;
+                case 'Equal': // + key
+                case 'NumpadAdd':
+                    e.preventDefault();
+                    this.increaseSpeed();
+                    break;
+                case 'Minus': // - key
+                case 'NumpadSubtract':
+                    e.preventDefault();
+                    this.decreaseSpeed();
+                    break;
             }
         });
 
@@ -180,6 +217,22 @@ class GameEngine {
     togglePause() {
         this.isPaused = !this.isPaused;
         console.log(this.isPaused ? 'Game paused' : 'Game resumed');
+    }
+
+    /**
+     * Increase game speed
+     */
+    increaseSpeed() {
+        this.gameSpeed = Math.min(this.gameSpeed * 1.5, 20); // Max 20x speed
+        console.log(`🚀 Speed increased to ${this.gameSpeed.toFixed(1)}x`);
+    }
+
+    /**
+     * Decrease game speed
+     */
+    decreaseSpeed() {
+        this.gameSpeed = Math.max(this.gameSpeed / 1.5, 0.5); // Min 0.5x speed
+        console.log(`🐌 Speed decreased to ${this.gameSpeed.toFixed(1)}x`);
     }
 
     /**
@@ -233,11 +286,31 @@ class GameEngine {
         // Update trading logic
         this.updateTrading();
 
+        // Update character
+        if (this.characterSystem) {
+            this.characterSystem.update(deltaTime);
+        }
+
+        // Update visual effects
+        if (this.visualEffects) {
+            this.visualEffects.update(deltaTime);
+        }
+
         // Update UI
         this.updateUI();
 
         // Render chart
         this.renderChart();
+        
+        // Render visual effects
+        if (this.visualEffects) {
+            this.visualEffects.render();
+        }
+        
+        // Render character
+        if (this.characterSystem) {
+            this.characterSystem.render();
+        }
     }
 
     /**
@@ -274,7 +347,7 @@ class GameEngine {
             
             this.lastTradePrice = currentPrice;
             
-            console.log(`Bought ${bitcoinToBuy.toFixed(8)} BTC at $${currentPrice.toFixed(2)}`);
+            console.log(`💰 Bought ${bitcoinToBuy.toFixed(8)} BTC at $${currentPrice.toFixed(2)}`);
         }
     }
 
@@ -285,7 +358,17 @@ class GameEngine {
         if (this.isPaused) return;
         
         this.isBuying = true;
-        console.log('Started buying Bitcoin...');
+        console.log('🟢 Started buying Bitcoin...');
+        
+        // Play buy sound
+        if (this.audioSystem) {
+            this.audioSystem.playSound('buy');
+        }
+        
+        // Trigger visual effect
+        if (this.visualEffects) {
+            this.visualEffects.triggerTradeEffect(this.canvas.width / 2, this.canvas.height / 2, 'buy');
+        }
     }
 
     /**
@@ -302,7 +385,8 @@ class GameEngine {
         const currentPrice = currentDataPoint.price;
         
         if (this.portfolio.bitcoin > 0) {
-            const cashFromSale = this.portfolio.bitcoin * currentPrice;
+            const bitcoinSold = this.portfolio.bitcoin;
+            const cashFromSale = bitcoinSold * currentPrice;
             this.portfolio.cash = cashFromSale;
             
             // Record trade
@@ -310,13 +394,42 @@ class GameEngine {
                 date: currentDataPoint.date,
                 action: 'sell',
                 price: currentPrice,
-                bitcoin: this.portfolio.bitcoin,
+                bitcoin: bitcoinSold,
                 value: cashFromSale
             });
             
             this.portfolio.bitcoin = 0;
             
-            console.log(`Sold ${this.portfolio.bitcoin.toFixed(8)} BTC at $${currentPrice.toFixed(2)} for $${cashFromSale.toFixed(2)}`);
+            console.log(`💸 Sold ${bitcoinSold.toFixed(8)} BTC at $${currentPrice.toFixed(2)} for $${cashFromSale.toFixed(2)}`);
+            
+            // Show profit/loss for this trade
+            if (this.lastTradePrice > 0) {
+                const tradePL = cashFromSale - (bitcoinSold * this.lastTradePrice);
+                const tradePLPercent = (tradePL / (bitcoinSold * this.lastTradePrice)) * 100;
+                const plSign = tradePL >= 0 ? '+' : '';
+                console.log(`📊 Trade P/L: ${plSign}$${tradePL.toFixed(2)} (${plSign}${tradePLPercent.toFixed(2)}%)`);
+                
+                // Play appropriate sound based on profit/loss
+                if (this.audioSystem) {
+                    if (tradePL > 0) {
+                        this.audioSystem.playSound('profit');
+                    } else if (tradePL < 0) {
+                        this.audioSystem.playSound('loss');
+                    } else {
+                        this.audioSystem.playSound('sell');
+                    }
+                }
+            } else {
+                // Play sell sound if no previous trade
+                if (this.audioSystem) {
+                    this.audioSystem.playSound('sell');
+                }
+            }
+            
+            // Trigger visual effect
+            if (this.visualEffects) {
+                this.visualEffects.triggerTradeEffect(this.canvas.width / 2, this.canvas.height / 2, 'sell');
+            }
         }
     }
 
@@ -350,6 +463,87 @@ class GameEngine {
         this.portfolio.totalValue = totalValue;
         const formattedValue = this.formatCurrency(totalValue);
         this.uiElements.portfolioValue.textContent = formattedValue;
+
+        // Update Bitcoin holdings
+        const bitcoinFormatted = this.portfolio.bitcoin.toFixed(8);
+        this.uiElements.bitcoinHoldings.textContent = bitcoinFormatted;
+
+        // Update cash amount
+        const cashFormatted = this.formatCurrency(this.portfolio.cash);
+        this.uiElements.cashAmount.textContent = cashFormatted;
+
+        // Update trading status
+        this.updateTradingStatus();
+
+        // Update profit/loss
+        this.updateProfitLoss();
+    }
+
+    /**
+     * Update trading status display
+     */
+    updateTradingStatus() {
+        // Remove all trading state classes
+        this.uiElements.tradingStatus.classList.remove('buying', 'selling', 'idle');
+        this.uiElements.portfolioValue.classList.remove('buying', 'selling');
+        this.uiElements.bitcoinHoldings.classList.remove('buying', 'selling');
+        this.uiElements.cashAmount.classList.remove('buying', 'selling');
+        this.canvas.classList.remove('buying', 'selling', 'paused');
+        
+        if (this.isPaused) {
+            this.uiElements.tradingStatus.textContent = 'GAME PAUSED';
+            this.uiElements.tradingStatus.classList.add('idle');
+            this.canvas.classList.add('paused');
+        } else if (this.isBuying) {
+            this.uiElements.tradingStatus.textContent = 'BUYING BITCOIN...';
+            this.uiElements.tradingStatus.classList.add('buying');
+            this.canvas.classList.add('buying');
+            
+            // Apply buying state colors
+            this.uiElements.portfolioValue.classList.add('buying');
+            this.uiElements.bitcoinHoldings.classList.add('buying');
+            this.uiElements.cashAmount.classList.add('buying');
+        } else {
+            this.uiElements.tradingStatus.textContent = 'READY TO TRADE';
+            this.uiElements.tradingStatus.classList.add('idle');
+            this.canvas.classList.add('selling');
+            
+            // Apply selling state colors (when not buying, we're ready to sell)
+            this.uiElements.portfolioValue.classList.add('selling');
+            this.uiElements.bitcoinHoldings.classList.add('selling');
+            this.uiElements.cashAmount.classList.add('selling');
+        }
+    }
+
+    /**
+     * Update profit/loss display
+     */
+    updateProfitLoss() {
+        const initialValue = 100000;
+        const currentValue = this.calculatePortfolioValue();
+        const profitLoss = currentValue - initialValue;
+        const profitLossPercentage = (profitLoss / initialValue) * 100;
+
+        // Format profit/loss value
+        const formattedPL = this.formatCurrency(Math.abs(profitLoss));
+        const sign = profitLoss >= 0 ? '+' : '-';
+        this.uiElements.profitLossValue.textContent = `${sign}${formattedPL}`;
+
+        // Format percentage
+        const formattedPercentage = `(${sign}${profitLossPercentage.toFixed(2)}%)`;
+        this.uiElements.profitLossPercentage.textContent = formattedPercentage;
+
+        // Apply color classes
+        if (profitLoss > 0) {
+            this.uiElements.profitLossValue.className = 'value positive';
+            this.uiElements.profitLossPercentage.className = 'percentage positive';
+        } else if (profitLoss < 0) {
+            this.uiElements.profitLossValue.className = 'value negative';
+            this.uiElements.profitLossPercentage.className = 'percentage negative';
+        } else {
+            this.uiElements.profitLossValue.className = 'value';
+            this.uiElements.profitLossPercentage.className = 'percentage';
+        }
     }
 
     /**

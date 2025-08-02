@@ -20,7 +20,26 @@
             </div>
             <div class="ui-element">
                 <span class="label">PORTFOLIO:</span>
-                <span id="portfolio-value" class="value">$100,000</span>
+                <span id="portfolio-value" class="value portfolio-value">$100,000</span>
+            </div>
+            <div class="ui-element">
+                <span class="label">BITCOIN:</span>
+                <span id="bitcoin-holdings" class="value bitcoin-holdings">0.00000000</span>
+            </div>
+            <div class="ui-element">
+                <span class="label">CASH:</span>
+                <span id="cash-amount" class="value cash-amount">$100,000</span>
+            </div>
+        </div>
+        
+        <div class="trading-panel">
+            <div class="trading-status">
+                <span id="trading-status" class="status-text trading-status">READY TO TRADE</span>
+            </div>
+            <div class="profit-loss">
+                <span class="label">P/L:</span>
+                <span id="profit-loss-value" class="value">$0</span>
+                <span id="profit-loss-percentage" class="percentage">(0.00%)</span>
             </div>
         </div>
         
@@ -29,12 +48,15 @@
         <div class="instructions">
             <p>HOLD LEFT MOUSE BUTTON OR SPACEBAR TO BUY BITCOIN</p>
             <p>RELEASE TO SELL ALL HOLDINGS</p>
-            <p>P: PAUSE | R: RESTART</p>
+            <p>P: PAUSE | R: RESTART | +/-: SPEED</p>
         </div>
     </div>
     
     <script src="js/data-manager.js"></script>
     <script src="js/chart-renderer.js"></script>
+    <script src="js/character-system.js"></script>
+    <script src="js/visual-effects.js"></script>
+    <script src="js/audio-system.js"></script>
     <script src="js/game-engine.js"></script>
     <script src="js/main.js"></script>
 </body>

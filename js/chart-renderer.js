@@ -2,10 +2,11 @@
  * Chart Renderer - Handles 8-bit style Bitcoin price chart rendering
  */
 class ChartRenderer {
-    constructor(canvas, dataManager) {
+    constructor(canvas, dataManager, gameEngine) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.dataManager = dataManager;
+        this.gameEngine = gameEngine;
         
         // 8-bit color palette
         this.colors = {
@@ -56,30 +57,46 @@ class ChartRenderer {
     }
 
     /**
-     * Draw the chart grid
+     * Draw the chart grid with enhanced 8-bit styling
      */
     drawGrid() {
+        // Main grid lines
         this.ctx.strokeStyle = this.colors.grid;
         this.ctx.lineWidth = 1;
         this.ctx.setLineDash([]);
 
-        // Vertical grid lines (time)
+        // Vertical grid lines (time) - thicker every 4th line
         const timeSteps = 12;
         for (let i = 0; i <= timeSteps; i++) {
             const x = this.chartArea.x + (i / timeSteps) * this.chartArea.width;
+            this.ctx.lineWidth = (i % 4 === 0) ? 2 : 1;
             this.ctx.beginPath();
             this.ctx.moveTo(x, this.chartArea.y);
             this.ctx.lineTo(x, this.chartArea.y + this.chartArea.height);
             this.ctx.stroke();
         }
 
-        // Horizontal grid lines (price)
+        // Horizontal grid lines (price) - thicker every 4th line
         const priceSteps = 8;
         for (let i = 0; i <= priceSteps; i++) {
             const y = this.chartArea.y + (i / priceSteps) * this.chartArea.height;
+            this.ctx.lineWidth = (i % 4 === 0) ? 2 : 1;
             this.ctx.beginPath();
             this.ctx.moveTo(this.chartArea.x, y);
             this.ctx.lineTo(this.chartArea.x + this.chartArea.width, y);
+            this.ctx.stroke();
+        }
+
+        // Add subtle diagonal lines for 8-bit effect
+        this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+        this.ctx.lineWidth = 1;
+        this.ctx.setLineDash([2, 4]);
+        
+        for (let i = 0; i < 5; i++) {
+            const startX = this.chartArea.x + (i * this.chartArea.width / 4);
+            this.ctx.beginPath();
+            this.ctx.moveTo(startX, this.chartArea.y);
+            this.ctx.lineTo(startX + 50, this.chartArea.y + 50);
             this.ctx.stroke();
         }
     }
@@ -124,7 +141,7 @@ class ChartRenderer {
     }
 
     /**
-     * Draw the price chart
+     * Draw the price chart with enhanced animations and effects
      */
     drawPriceChart(dataPoints, minPrice, maxPrice) {
         if (dataPoints.length < 2) return;
@@ -136,8 +153,12 @@ class ChartRenderer {
             return { x, y, price: point.price };
         });
 
-        // Draw price fill area
-        this.ctx.fillStyle = this.colors.priceFill;
+        // Draw price fill area with gradient
+        const gradient = this.ctx.createLinearGradient(0, this.chartArea.y, 0, this.chartArea.y + this.chartArea.height);
+        gradient.addColorStop(0, 'rgba(0, 255, 0, 0.3)');
+        gradient.addColorStop(1, 'rgba(0, 255, 0, 0.05)');
+        
+        this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
         this.ctx.moveTo(this.chartArea.x, this.chartArea.y + this.chartArea.height);
         
@@ -149,7 +170,28 @@ class ChartRenderer {
         this.ctx.closePath();
         this.ctx.fill();
 
-        // Draw price line
+        // Draw price line with glow effect
+        this.ctx.shadowColor = '#00ff00';
+        this.ctx.shadowBlur = 10;
+        this.ctx.strokeStyle = this.colors.priceLine;
+        this.ctx.lineWidth = 3;
+        this.ctx.setLineDash([]);
+        this.ctx.beginPath();
+        
+        points.forEach((point, index) => {
+            if (index === 0) {
+                this.ctx.moveTo(point.x, point.y);
+            } else {
+                this.ctx.lineTo(point.x, point.y);
+            }
+        });
+        
+        this.ctx.stroke();
+        
+        // Reset shadow
+        this.ctx.shadowBlur = 0;
+
+        // Draw price line (main line)
         this.ctx.strokeStyle = this.colors.priceLine;
         this.ctx.lineWidth = 2;
         this.ctx.setLineDash([]);
@@ -165,10 +207,40 @@ class ChartRenderer {
         
         this.ctx.stroke();
 
+        // Add price movement indicators
+        this.drawPriceMovementIndicators(points);
+
         // Draw current price indicator
         if (points.length > 0) {
             const currentPoint = points[points.length - 1];
             this.drawCurrentPriceIndicator(currentPoint);
+        }
+    }
+
+    /**
+     * Draw price movement indicators
+     */
+    drawPriceMovementIndicators(points) {
+        if (points.length < 2) return;
+
+        // Find significant price movements
+        for (let i = 1; i < points.length; i++) {
+            const prevPrice = points[i - 1].price;
+            const currentPrice = points[i].price;
+            const priceChange = ((currentPrice - prevPrice) / prevPrice) * 100;
+            
+            // Show indicator for significant movements (>5%)
+            if (Math.abs(priceChange) > 5) {
+                const point = points[i];
+                const isUp = priceChange > 0;
+                
+                this.ctx.fillStyle = isUp ? '#00ff00' : '#ff0000';
+                this.ctx.font = '8px "Press Start 2P"';
+                this.ctx.textAlign = 'center';
+                
+                const symbol = isUp ? '↗' : '↘';
+                this.ctx.fillText(symbol, point.x, point.y - 10);
+            }
         }
     }
 
@@ -226,6 +298,47 @@ class ChartRenderer {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'top';
         this.ctx.fillText('BITCOIN PRICE CHART', this.canvas.width / 2, 10);
+        
+        // Draw trading state indicator
+        this.drawTradingStateIndicator();
+    }
+
+    /**
+     * Draw trading state indicator
+     */
+    drawTradingStateIndicator() {
+        if (!this.gameEngine) return;
+        
+        const gameState = this.gameEngine.getGameState();
+        let indicatorText = '';
+        let indicatorColor = '#00ff00';
+        
+        if (gameState.isPaused) {
+            indicatorText = 'PAUSED';
+            indicatorColor = '#ffff00';
+        } else if (gameState.isBuying) {
+            indicatorText = 'BUYING';
+            indicatorColor = '#00ff00';
+        } else {
+            indicatorText = 'READY TO SELL';
+            indicatorColor = '#ff8c00';
+        }
+        
+        // Draw indicator background
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fillRect(this.canvas.width - 120, 10, 110, 20);
+        
+        // Draw indicator border
+        this.ctx.strokeStyle = indicatorColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(this.canvas.width - 120, 10, 110, 20);
+        
+        // Draw indicator text
+        this.ctx.fillStyle = indicatorColor;
+        this.ctx.font = '8px "Press Start 2P"';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(indicatorText, this.canvas.width - 65, 20);
     }
 
     /**
