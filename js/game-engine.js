@@ -13,7 +13,7 @@ class GameEngine {
         // Game state
         this.isRunning = false;
         this.isPaused = false;
-        this.gameSpeed = 5; // days per second (increased from 1)
+        this.gameSpeed = 20; // days per second (increased from 5 to 20 for much faster time progression)
         this.currentDateIndex = 0;
         this.startDateIndex = 0;
         this.endDateIndex = 0;
@@ -29,6 +29,7 @@ class GameEngine {
         this.isBuying = false;
         this.lastTradePrice = 0;
         this.tradeHistory = [];
+        this.lastTradeTime = 0; // Add timestamp for trade cooldown
         
         // UI elements
         this.uiElements = {
@@ -252,6 +253,7 @@ class GameEngine {
         this.isBuying = false;
         this.lastTradePrice = 0;
         this.tradeHistory = [];
+        this.lastTradeTime = 0; // Reset trade cooldown
         
         // Reset game state
         this.setupGameParameters();
@@ -357,10 +359,15 @@ class GameEngine {
     startBuying() {
         if (this.isPaused) return;
         
+        // Prevent rapid clicking
+        const now = Date.now();
+        if (now - this.lastTradeTime < 100) return; // 100ms cooldown
+        this.lastTradeTime = now;
+        
         this.isBuying = true;
         console.log('🟢 Started buying Bitcoin...');
         
-        // Play buy sound
+        // Play buy sound immediately
         if (this.audioSystem) {
             this.audioSystem.playSound('buy');
         }
@@ -369,6 +376,9 @@ class GameEngine {
         if (this.visualEffects) {
             this.visualEffects.triggerTradeEffect(this.canvas.width / 2, this.canvas.height / 2, 'buy');
         }
+        
+        // Update UI immediately to show buying state
+        this.updateTradingStatus();
     }
 
     /**
@@ -376,6 +386,11 @@ class GameEngine {
      */
     stopBuying() {
         if (!this.isBuying) return;
+        
+        // Prevent rapid clicking
+        const now = Date.now();
+        if (now - this.lastTradeTime < 100) return; // 100ms cooldown
+        this.lastTradeTime = now;
         
         this.isBuying = false;
         
@@ -430,7 +445,15 @@ class GameEngine {
             if (this.visualEffects) {
                 this.visualEffects.triggerTradeEffect(this.canvas.width / 2, this.canvas.height / 2, 'sell');
             }
+        } else {
+            // No bitcoin to sell, just play a click sound
+            if (this.audioSystem) {
+                this.audioSystem.playSound('click');
+            }
         }
+        
+        // Update UI immediately to show selling state
+        this.updateTradingStatus();
     }
 
     /**
