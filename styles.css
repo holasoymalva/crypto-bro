@@ -1,0 +1,125 @@
+/* 8-Bit Retro Styling for Crypto Boy */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0f0f23;
+    font-family: 'Press Start 2P', monospace;
+    color: #00ff00;
+    overflow: hidden;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(45deg, #0f0f23 0%, #1a1a2e 50%, #0f0f23 100%);
+}
+
+.ui-panel {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 20px;
+    padding: 15px 25px;
+    background: #000000;
+    border: 3px solid #00ff00;
+    border-radius: 0;
+    box-shadow: 
+        0 0 0 2px #000000,
+        0 0 0 5px #00ff00,
+        0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.ui-element {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.label {
+    font-size: 10px;
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+.value {
+    font-size: 12px;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #000000;
+    font-weight: bold;
+}
+
+#gameCanvas {
+    border: 4px solid #00ff00;
+    background: #000000;
+    box-shadow: 
+        0 0 0 2px #000000,
+        0 0 0 6px #00ff00,
+        0 0 30px rgba(0, 255, 0, 0.4);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+.instructions {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 10px;
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+    line-height: 1.5;
+}
+
+.instructions p {
+    margin: 5px 0;
+}
+
+/* 8-Bit Color Palette */
+:root {
+    --primary-green: #00ff00;
+    --secondary-green: #00cc00;
+    --dark-green: #008800;
+    --white: #ffffff;
+    --black: #000000;
+    --dark-bg: #0f0f23;
+    --chart-bg: #000000;
+    --grid-color: #333333;
+    --price-line: #00ff00;
+    --price-fill: rgba(0, 255, 0, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+    .ui-panel {
+        gap: 20px;
+        padding: 10px 15px;
+    }
+    
+    .label {
+        font-size: 8px;
+    }
+    
+    .value {
+        font-size: 10px;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+    }
+    
+    .instructions {
+        font-size: 8px;
+    }
+} 

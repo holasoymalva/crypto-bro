@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Boy - 8-Bit Bitcoin Trading</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-panel">
+            <div class="ui-element">
+                <span class="label">DATE:</span>
+                <span id="current-date" class="value">--</span>
+            </div>
+            <div class="ui-element">
+                <span class="label">PRICE:</span>
+                <span id="current-price" class="value">$--</span>
+            </div>
+            <div class="ui-element">
+                <span class="label">PORTFOLIO:</span>
+                <span id="portfolio-value" class="value">$100,000</span>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="instructions">
+            <p>HOLD LEFT MOUSE BUTTON OR SPACEBAR TO BUY BITCOIN</p>
+            <p>RELEASE TO SELL ALL HOLDINGS</p>
+            <p>P: PAUSE | R: RESTART</p>
+        </div>
+    </div>
+    
+    <script src="js/data-manager.js"></script>
+    <script src="js/chart-renderer.js"></script>
+    <script src="js/game-engine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
