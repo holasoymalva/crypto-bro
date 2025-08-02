@@ -282,6 +282,11 @@ class GameStateManager {
      * Show settings
      */
     showSettings() {
+        // Update the settings modal with current values
+        document.getElementById('music-volume').value = this.settings.musicVolume;
+        document.getElementById('sfx-volume').value = this.settings.sfxVolume;
+        document.getElementById('game-speed').value = this.settings.gameSpeed;
+        
         this.settingsModal.style.display = 'flex';
     }
 
@@ -319,7 +324,10 @@ class GameStateManager {
             gameEngine.gameSpeed = this.settings.gameSpeed;
             
             if (gameEngine.audioSystem) {
-                gameEngine.audioSystem.setVolume(this.settings.sfxVolume / 100);
+                // Apply music volume
+                gameEngine.audioSystem.setMusicVolume(this.settings.musicVolume / 100);
+                // Apply SFX volume
+                gameEngine.audioSystem.setSFXVolume(this.settings.sfxVolume / 100);
             }
         }
     }
