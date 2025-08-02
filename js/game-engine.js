@@ -9,6 +9,7 @@ class GameEngine {
         this.characterSystem = null; // Will be initialized after character system is loaded
         this.visualEffects = null; // Will be initialized after visual effects system is loaded
         this.audioSystem = null; // Will be initialized after audio system is loaded
+        this.gameStateManager = null; // Will be set by main.js
         
         // Game state
         this.isRunning = false;
@@ -30,6 +31,8 @@ class GameEngine {
         this.lastTradePrice = 0;
         this.tradeHistory = [];
         this.lastTradeTime = 0; // Add timestamp for trade cooldown
+        this.bestTrade = 0; // Track best single trade
+        this.sessionStartTime = Date.now(); // Track session time
         
         // UI elements
         this.uiElements = {
@@ -40,7 +43,11 @@ class GameEngine {
             cashAmount: document.getElementById('cash-amount'),
             tradingStatus: document.getElementById('trading-status'),
             profitLossValue: document.getElementById('profit-loss-value'),
-            profitLossPercentage: document.getElementById('profit-loss-percentage')
+            profitLossPercentage: document.getElementById('profit-loss-percentage'),
+            totalTrades: document.getElementById('total-trades'),
+            winRate: document.getElementById('win-rate'),
+            bestTrade: document.getElementById('best-trade'),
+            sessionTime: document.getElementById('session-time')
         };
         
         // Animation
@@ -172,6 +179,12 @@ class GameEngine {
                     e.preventDefault();
                     this.togglePause();
                     break;
+                case 'KeyM':
+                    e.preventDefault();
+                    if (this.gameStateManager) {
+                        this.gameStateManager.showMenu();
+                    }
+                    break;
                 case 'Equal': // + key
                 case 'NumpadAdd':
                     e.preventDefault();
@@ -254,6 +267,8 @@ class GameEngine {
         this.lastTradePrice = 0;
         this.tradeHistory = [];
         this.lastTradeTime = 0; // Reset trade cooldown
+        this.bestTrade = 0; // Reset best trade
+        this.sessionStartTime = Date.now(); // Reset session start time
         
         // Reset game state
         this.setupGameParameters();
@@ -424,6 +439,19 @@ class GameEngine {
                 const plSign = tradePL >= 0 ? '+' : '';
                 console.log(`📊 Trade P/L: ${plSign}$${tradePL.toFixed(2)} (${plSign}${tradePLPercent.toFixed(2)}%)`);
                 
+                // Track best trade
+                if (tradePL > this.bestTrade) {
+                    this.bestTrade = tradePL;
+                }
+                
+                // Update session statistics
+                if (this.gameStateManager) {
+                    this.gameStateManager.updateSessionStats({
+                        profit: tradePL,
+                        currentValue: this.calculatePortfolioValue()
+                    });
+                }
+                
                 // Play appropriate sound based on profit/loss
                 if (this.audioSystem) {
                     if (tradePL > 0) {
@@ -500,6 +528,9 @@ class GameEngine {
 
         // Update profit/loss
         this.updateProfitLoss();
+        
+        // Update session statistics
+        this.updateSessionStats();
     }
 
     /**
@@ -570,6 +601,31 @@ class GameEngine {
     }
 
     /**
+     * Update session statistics
+     */
+    updateSessionStats() {
+        if (this.gameStateManager) {
+            const stats = this.gameStateManager.getSessionStats();
+            
+            // Update session time
+            const sessionTime = Date.now() - this.sessionStartTime;
+            const minutes = Math.floor(sessionTime / (1000 * 60));
+            const seconds = Math.floor((sessionTime % (1000 * 60)) / 1000);
+            this.uiElements.sessionTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update total trades
+            this.uiElements.totalTrades.textContent = stats.totalTrades;
+            
+            // Update win rate
+            const winRate = stats.totalTrades > 0 ? (stats.winningTrades / stats.totalTrades) * 100 : 0;
+            this.uiElements.winRate.textContent = `${winRate.toFixed(1)}%`;
+            
+            // Update best trade
+            this.uiElements.bestTrade.textContent = this.formatCurrency(this.bestTrade);
+        }
+    }
+
+    /**
      * Render the chart
      */
     renderChart() {
@@ -598,6 +654,11 @@ class GameEngine {
         console.log(`Final Portfolio Value: $${this.formatCurrency(finalValue)}`);
         console.log(`Profit/Loss: $${this.formatCurrency(profit)} (${profitPercentage.toFixed(2)}%)`);
         console.log(`Total Trades: ${this.tradeHistory.length}`);
+        
+        // End game session with game state manager
+        if (this.gameStateManager) {
+            this.gameStateManager.endGameSession(finalValue);
+        }
     }
 
     /**

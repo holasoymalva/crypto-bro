@@ -7,6 +7,7 @@ class CryptoBoyGame {
         this.dataManager = null;
         this.chartRenderer = null;
         this.gameEngine = null;
+        this.gameStateManager = null;
         this.isInitialized = false;
     }
 
@@ -17,6 +18,11 @@ class CryptoBoyGame {
         console.log('🚀 Initializing Crypto Boy...');
         
         try {
+            // Initialize game state manager first
+            this.gameStateManager = new GameStateManager();
+            this.gameStateManager.initialize();
+            gameStateManager = this.gameStateManager; // Set global reference
+            
             // Get canvas element
             this.canvas = document.getElementById('gameCanvas');
             if (!this.canvas) {
@@ -27,6 +33,9 @@ class CryptoBoyGame {
             this.dataManager = new DataManager();
             this.chartRenderer = new ChartRenderer(this.canvas, this.dataManager);
             this.gameEngine = new GameEngine(this.canvas, this.dataManager, this.chartRenderer);
+            
+            // Connect game state manager to game engine
+            this.gameEngine.gameStateManager = this.gameStateManager;
 
             // Wait for all components to initialize
             await this.gameEngine.initialize();
@@ -137,80 +146,20 @@ class CryptoBoyGame {
 
 // Global game instance
 let cryptoBoyGame;
+let gameStateManager; // Global reference for modal buttons
 
 // Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🎮 Crypto Boy - 8-Bit Bitcoin Trading Game');
     console.log('📊 Loading historical Bitcoin data...');
     
-    // Create loading screen
-    const loadingScreen = document.createElement('div');
-    loadingScreen.className = 'loading-screen';
-    loadingScreen.innerHTML = `
-        <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f0f23;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            font-family: 'Press Start 2P', monospace;
-            color: #00ff00;
-        ">
-            <h1 style="margin-bottom: 20px; text-shadow: 2px 2px 0px #000000;">CRYPTO BOY</h1>
-            <p style="margin-bottom: 10px; text-shadow: 2px 2px 0px #000000;">Loading Bitcoin data...</p>
-            <div style="
-                width: 200px;
-                height: 4px;
-                background: #333333;
-                border: 1px solid #00ff00;
-                overflow: hidden;
-            ">
-                <div id="loading-bar" style="
-                    width: 0%;
-                    height: 100%;
-                    background: #00ff00;
-                    transition: width 0.3s ease;
-                "></div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(loadingScreen);
-
-    // Simulate loading progress
-    const loadingBar = document.getElementById('loading-bar');
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 20;
-        if (progress > 90) progress = 90;
-        loadingBar.style.width = progress + '%';
-    }, 200);
-
     try {
         // Initialize the game
         cryptoBoyGame = new CryptoBoyGame();
         await cryptoBoyGame.initialize();
         
-        // Complete loading
-        clearInterval(progressInterval);
-        loadingBar.style.width = '100%';
-        
-        setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.remove();
-            }, 500);
-        }, 500);
-        
     } catch (error) {
         console.error('Failed to start game:', error);
-        clearInterval(progressInterval);
-        loadingScreen.remove();
     }
 });
 

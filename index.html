@@ -43,12 +43,31 @@
             </div>
         </div>
         
+        <div class="session-stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">TRADES:</span>
+                <span id="total-trades" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">WIN RATE:</span>
+                <span id="win-rate" class="stat-value">0%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">BEST TRADE:</span>
+                <span id="best-trade" class="stat-value">$0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">SESSION TIME:</span>
+                <span id="session-time" class="stat-value">0:00</span>
+            </div>
+        </div>
+        
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
         <div class="instructions">
             <p>HOLD LEFT MOUSE BUTTON OR SPACEBAR TO BUY BITCOIN</p>
             <p>RELEASE TO SELL ALL HOLDINGS</p>
-            <p>P: PAUSE | R: RESTART | +/-: SPEED</p>
+            <p>P: PAUSE | R: RESTART | M: MENU | +/-: SPEED</p>
         </div>
     </div>
     
@@ -57,6 +76,7 @@
     <script src="js/character-system.js"></script>
     <script src="js/visual-effects.js"></script>
     <script src="js/audio-system.js"></script>
+    <script src="js/game-state-manager.js"></script>
     <script src="js/game-engine.js"></script>
     <script src="js/main.js"></script>
 </body>
