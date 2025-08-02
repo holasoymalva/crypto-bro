@@ -222,6 +222,11 @@ class GameStateManager {
      */
     showMenu() {
         this.currentState = 'menu';
+        
+        // Close any open modals first
+        this.closeModal();
+        
+        // Show main menu
         this.menuContainer.style.display = 'flex';
         this.hideGameUI();
     }
@@ -439,8 +444,28 @@ class GameStateManager {
      * Restart game
      */
     restartGame() {
+        console.log('🔄 Game State Manager: Restarting game...');
         this.closeModal();
-        this.startGame();
+        
+        // Reset game state
+        this.currentState = 'playing';
+        this.resetSessionStats();
+        
+        // Ensure game UI is shown
+        this.showGameUI();
+        
+        // Restart the game engine
+        if (window.cryptoBoyGame && window.cryptoBoyGame.getGameEngine()) {
+            console.log('🔄 Restarting existing game engine...');
+            const gameEngine = window.cryptoBoyGame.getGameEngine();
+            gameEngine.restart();
+        } else if (window.cryptoBoyGame) {
+            // If game engine doesn't exist, reinitialize
+            console.log('🔄 Reinitializing game...');
+            window.cryptoBoyGame.initialize();
+        } else {
+            console.error('❌ No game instance found!');
+        }
     }
 
     /**

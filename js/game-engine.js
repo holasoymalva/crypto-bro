@@ -272,7 +272,10 @@ class GameEngine {
      * Restart the game
      */
     restart() {
-        console.log('Restarting game...');
+        console.log('🔄 Restarting game...');
+        
+        // Stop the current game loop
+        this.isRunning = false;
         
         // Reset portfolio
         this.portfolio = {
@@ -297,8 +300,19 @@ class GameEngine {
         this.setupGameParameters();
         this.isPaused = false;
         
+        // Reset accumulated time
+        this.accumulatedTime = 0;
+        this.lastFrameTime = performance.now();
+        
         // Update UI
         this.updateUI();
+        
+        console.log('✅ Game state reset complete, starting new game...');
+        
+        // Restart the game loop
+        setTimeout(() => {
+            this.start();
+        }, 100);
     }
 
     /**
