@@ -18,6 +18,9 @@ class GameEngine {
         this.currentDateIndex = 0;
         this.startDateIndex = 0;
         this.endDateIndex = 0;
+        this.gameTimeLimit = 30000; // 30 seconds in milliseconds
+        this.gameStartTime = 0;
+        this.timeRemaining = 30000;
         
         // Portfolio state
         this.portfolio = {
@@ -47,7 +50,8 @@ class GameEngine {
             totalTrades: document.getElementById('total-trades'),
             winRate: document.getElementById('win-rate'),
             bestTrade: document.getElementById('best-trade'),
-            sessionTime: document.getElementById('session-time')
+            sessionTime: document.getElementById('session-time'),
+            timeRemaining: document.getElementById('time-remaining')
         };
         
         // Animation
@@ -147,13 +151,7 @@ class GameEngine {
         // Mouse events for trading
         this.canvas.addEventListener('mousedown', (e) => {
             if (e.button === 0) { // Left mouse button
-                this.startBuying();
-            }
-        });
-
-        this.canvas.addEventListener('mouseup', (e) => {
-            if (e.button === 0) { // Left mouse button
-                this.stopBuying();
+                this.toggleTrading();
             }
         });
 
@@ -167,9 +165,7 @@ class GameEngine {
             switch (e.code) {
                 case 'Space':
                     e.preventDefault();
-                    if (!this.isBuying) {
-                        this.startBuying();
-                    }
+                    this.toggleTrading();
                     break;
                 case 'KeyR':
                     e.preventDefault();
@@ -197,16 +193,6 @@ class GameEngine {
                     break;
             }
         });
-
-        // Keyboard events for selling
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (this.isBuying) {
-                    this.stopBuying();
-                }
-            }
-        });
     }
 
     /**
@@ -215,6 +201,8 @@ class GameEngine {
     start() {
         this.isRunning = true;
         this.lastFrameTime = performance.now();
+        this.gameStartTime = Date.now();
+        this.timeRemaining = this.gameTimeLimit;
         this.gameLoop();
     }
 
@@ -250,6 +238,37 @@ class GameEngine {
     }
 
     /**
+     * Update game timer
+     */
+    updateGameTimer() {
+        const elapsed = Date.now() - this.gameStartTime;
+        this.timeRemaining = Math.max(0, this.gameTimeLimit - elapsed);
+    }
+
+    /**
+     * End game due to time limit
+     */
+    endGame() {
+        console.log('⏰ Time is up! Game Over!');
+        this.isRunning = false;
+        
+        // Calculate final statistics
+        const finalValue = this.calculatePortfolioValue();
+        const initialValue = 100000;
+        const profit = finalValue - initialValue;
+        const profitPercentage = (profit / initialValue) * 100;
+        
+        console.log(`Final Portfolio Value: $${this.formatCurrency(finalValue)}`);
+        console.log(`Profit/Loss: $${this.formatCurrency(profit)} (${profitPercentage.toFixed(2)}%)`);
+        console.log(`Total Trades: ${this.tradeHistory.length}`);
+        
+        // End game session with game state manager
+        if (this.gameStateManager) {
+            this.gameStateManager.endGameSession(finalValue);
+        }
+    }
+
+    /**
      * Restart the game
      */
     restart() {
@@ -269,6 +288,10 @@ class GameEngine {
         this.lastTradeTime = 0; // Reset trade cooldown
         this.bestTrade = 0; // Reset best trade
         this.sessionStartTime = Date.now(); // Reset session start time
+        
+        // Reset game timer
+        this.gameStartTime = Date.now();
+        this.timeRemaining = this.gameTimeLimit;
         
         // Reset game state
         this.setupGameParameters();
@@ -292,6 +315,15 @@ class GameEngine {
         this.lastFrameTime = currentTime;
 
         this.accumulatedTime += deltaTime;
+
+        // Update game timer
+        this.updateGameTimer();
+
+        // Check if time is up
+        if (this.timeRemaining <= 0) {
+            this.endGame();
+            return;
+        }
 
         // Update game state based on time progression
         const daysToAdvance = this.accumulatedTime * this.gameSpeed;
@@ -369,15 +401,30 @@ class GameEngine {
     }
 
     /**
-     * Start buying Bitcoin
+     * Toggle between buying and selling
      */
-    startBuying() {
+    toggleTrading() {
         if (this.isPaused) return;
         
         // Prevent rapid clicking
         const now = Date.now();
         if (now - this.lastTradeTime < 100) return; // 100ms cooldown
         this.lastTradeTime = now;
+        
+        if (this.isBuying) {
+            // Currently buying, so sell
+            this.sellBitcoin();
+        } else {
+            // Not buying, so start buying
+            this.startBuying();
+        }
+    }
+
+    /**
+     * Start buying Bitcoin
+     */
+    startBuying() {
+        if (this.isPaused) return;
         
         this.isBuying = true;
         console.log('🟢 Started buying Bitcoin...');
@@ -397,15 +444,10 @@ class GameEngine {
     }
 
     /**
-     * Stop buying and sell all Bitcoin
+     * Sell all Bitcoin
      */
-    stopBuying() {
+    sellBitcoin() {
         if (!this.isBuying) return;
-        
-        // Prevent rapid clicking
-        const now = Date.now();
-        if (now - this.lastTradeTime < 100) return; // 100ms cooldown
-        this.lastTradeTime = now;
         
         this.isBuying = false;
         
@@ -531,6 +573,9 @@ class GameEngine {
         
         // Update session statistics
         this.updateSessionStats();
+        
+        // Update timer display
+        this.updateTimerDisplay();
     }
 
     /**
@@ -622,6 +667,24 @@ class GameEngine {
             
             // Update best trade
             this.uiElements.bestTrade.textContent = this.formatCurrency(this.bestTrade);
+        }
+    }
+
+    /**
+     * Update timer display
+     */
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.timeRemaining / (1000 * 60));
+        const seconds = Math.floor((this.timeRemaining % (1000 * 60)) / 1000);
+        this.uiElements.timeRemaining.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update timer color based on remaining time
+        this.uiElements.timeRemaining.classList.remove('warning', 'danger');
+        
+        if (this.timeRemaining <= 5000) { // 5 seconds or less
+            this.uiElements.timeRemaining.classList.add('danger');
+        } else if (this.timeRemaining <= 10000) { // 10 seconds or less
+            this.uiElements.timeRemaining.classList.add('warning');
         }
     }
 

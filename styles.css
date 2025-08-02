@@ -706,6 +706,14 @@ body {
     margin-top: 20px;
 }
 
+.game-over-subtitle {
+    text-align: center;
+    color: #00ff00;
+    font-size: 12px;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 0px #000000;
+}
+
 /* Loading Screen Styles */
 .loading-screen {
     position: fixed;
@@ -844,5 +852,51 @@ body {
         flex-direction: column;
         gap: 5px;
         text-align: center;
+    }
+} 
+
+/* Timer display styles */
+.time-remaining {
+    color: #00ff00;
+    text-shadow: 0 0 10px #00ff00;
+    animation: timerPulse 1s ease-in-out infinite alternate;
+}
+
+.time-remaining.warning {
+    color: #ff8c00;
+    text-shadow: 0 0 10px #ff8c00;
+    animation: timerWarning 0.5s ease-in-out infinite alternate;
+}
+
+.time-remaining.danger {
+    color: #ff0000;
+    text-shadow: 0 0 10px #ff0000;
+    animation: timerDanger 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse {
+    from {
+        text-shadow: 0 0 10px #00ff00;
+    }
+    to {
+        text-shadow: 0 0 15px #00ff00, 0 0 25px #00ff00;
+    }
+}
+
+@keyframes timerWarning {
+    from {
+        text-shadow: 0 0 10px #ff8c00;
+    }
+    to {
+        text-shadow: 0 0 15px #ff8c00, 0 0 25px #ff8c00;
+    }
+}
+
+@keyframes timerDanger {
+    from {
+        text-shadow: 0 0 10px #ff0000;
+    }
+    to {
+        text-shadow: 0 0 15px #ff0000, 0 0 25px #ff0000;
     }
 } 

@@ -154,17 +154,17 @@ class GameStateManager {
             <div class="modal-content">
                 <h2>HOW TO PLAY</h2>
                 <div class="instructions-content">
-                    <p><strong>OBJECTIVE:</strong> Buy low, sell high to maximize your portfolio value!</p>
+                    <p><strong>OBJECTIVE:</strong> Buy low, sell high to maximize your portfolio value in 30 seconds!</p>
                     <p><strong>CONTROLS:</strong></p>
                     <ul>
-                        <li>SPACE or LEFT MOUSE: Hold to buy Bitcoin</li>
-                        <li>Release to sell all Bitcoin</li>
+                        <li>SPACE or LEFT MOUSE: Click to buy Bitcoin</li>
+                        <li>SPACE or LEFT MOUSE: Click again to sell all Bitcoin</li>
                         <li>P: Pause/Resume game</li>
                         <li>R: Restart game</li>
                         <li>M: Return to main menu</li>
                         <li>+/-: Adjust game speed</li>
                     </ul>
-                    <p><strong>STRATEGY:</strong> Watch the chart and time your trades carefully. The market moves fast!</p>
+                    <p><strong>STRATEGY:</strong> Watch the chart and time your trades carefully. You have 30 seconds to make the most profit!</p>
                 </div>
                 <button class="modal-btn" onclick="gameStateManager.closeModal()">GOT IT!</button>
             </div>
@@ -176,10 +176,11 @@ class GameStateManager {
         this.gameOverModal.innerHTML = `
             <div class="modal-content">
                 <h2>GAME OVER</h2>
+                <p class="game-over-subtitle">⏰ Time's up! Here are your results:</p>
                 <div id="game-over-stats"></div>
                 <div class="game-over-buttons">
                     <button class="modal-btn" onclick="gameStateManager.restartGame()">PLAY AGAIN</button>
-                    <button class="modal-btn" onclick="gameStateManager.showMenu()">MAIN MENU</button>
+                    <button class="modal-btn" onclick="gameStateManager.showMenu()">START MENU</button>
                 </div>
             </div>
         `;
